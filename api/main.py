@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import get_settings
-from app.lifespan import lifespan
+from api.config import get_settings
+from api.lifespan import lifespan
 
 
 def get_application() -> FastAPI:
