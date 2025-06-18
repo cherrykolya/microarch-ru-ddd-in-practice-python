@@ -596,6 +596,25 @@ files = [
 ]
 
 [[package]]
+name = "returns"
+version = "0.25.0"
+description = "Make your functions return something meaningful, typed, and safe!"
+optional = false
+python-versions = "<4.0,>=3.10"
+groups = ["main"]
+files = [
+    {file = "returns-0.25.0-py3-none-any.whl", hash = "sha256:bdc6ec52d28e74d6965f6de5a3af5e39427e67266014b605865fe2e194a75ed0"},
+    {file = "returns-0.25.0.tar.gz", hash = "sha256:1bf547311c0ade25435ce3bbe81642c325ea6b86beaf5d624cd410f0dee3ff50"},
+]
+
+[package.dependencies]
+typing-extensions = ">=4.0,<5.0"
+
+[package.extras]
+check-laws = ["hypothesis (>=6.122,<7.0)", "pytest (>=8.0,<9.0)"]
+compatible-mypy = ["mypy (>=1.12,<1.16)"]
+
+[[package]]
 name = "ruff"
 version = "0.0.282"
 description = "An extremely fast Python linter, written in Rust."
@@ -721,5 +740,5 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 
 [metadata]
 lock-version = "2.1"
-python-versions = "3.11.*"
-content-hash = "0bd31ff065543b99a9744dc9e02f48732193915997133f17c71a9250fbf4641a"
+python-versions = ">=3.11,<3.12"
+content-hash = "324eafafa1c2dca9708e0ac5f9aad3e23dd982523ab5a143a4785c5ad7f9b6e6"
