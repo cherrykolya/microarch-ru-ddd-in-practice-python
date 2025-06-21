@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/cherrykolya/microarch-ru-ddd-in-practice-python/branch/main/graph/badge.svg)](https://codecov.io/gh/cherrykolya/microarch-ru-ddd-in-practice-python)
+
 # Демо проект к курсу "Domain Driven Design и Clean Architecture на языке C#"
 
 📚 Подробнее о курсе: [microarch.ru/courses/ddd/languages/csharp](http://microarch.ru/courses/ddd/languages/csharp)
