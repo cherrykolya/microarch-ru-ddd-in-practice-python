@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import pytest
 
-from core.domain.model.courier_aggregate.storage_place import StoragePlace  # Замени путь
+from core.domain.model.courier_aggregate.storage_place import StoragePlace
 
 
 def test_create_valid_storage_place():
