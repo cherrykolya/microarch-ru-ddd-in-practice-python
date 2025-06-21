@@ -1,49 +1,38 @@
 import pytest
 from pydantic import ValidationError
-from returns.result import Failure, Success
 
-from core.domain.shared_kernel.location import Location  # Замени на путь к твоей модели
+from core.domain.shared_kernel.location import Location
 
 
 def test_create_valid_location():
-    result = Location.create(3, 4)
-    assert isinstance(result, Success)
-
-    loc = result.unwrap()
+    loc = Location.create(3, 4)
+    assert isinstance(loc, Location)
     assert loc.x == 3
     assert loc.y == 4
 
 
-def test_create_invalid_x():
-    result = Location.create(0, 5)
-    assert isinstance(result, Failure)
-    assert result.failure() == "Invalid x-coordinate"
-
-    result = Location.create(11, 5)
-    assert isinstance(result, Failure)
-    assert result.failure() == "Invalid x-coordinate"
+@pytest.mark.parametrize("x", [0, 11])
+def test_create_invalid_x(x):
+    with pytest.raises(ValueError, match="Invalid x-coordinate"):
+        Location.create(x, 5)
 
 
-def test_create_invalid_y():
-    result = Location.create(5, 0)
-    assert isinstance(result, Failure)
-    assert result.failure() == "Invalid y-coordinate"
-
-    result = Location.create(5, 11)
-    assert isinstance(result, Failure)
-    assert result.failure() == "Invalid y-coordinate"
+@pytest.mark.parametrize("y", [0, 11])
+def test_create_invalid_y(y):
+    with pytest.raises(ValueError, match="Invalid y-coordinate"):
+        Location.create(5, y)
 
 
 def test_distance_to():
-    loc1 = Location.create(1, 2).unwrap()
-    loc2 = Location.create(4, 5).unwrap()
+    loc1 = Location.create(1, 2)
+    loc2 = Location.create(4, 5)
     assert loc1.distance_to(loc2) == 6  # |1-4| + |2-5| = 3 + 3
 
 
 def test_location_equality_and_hash():
-    loc1 = Location.create(5, 5).unwrap()
-    loc2 = Location.create(5, 5).unwrap()
-    loc3 = Location.create(6, 5).unwrap()
+    loc1 = Location.create(5, 5)
+    loc2 = Location.create(5, 5)
+    loc3 = Location.create(6, 5)
 
     assert loc1 == loc2
     assert loc1 != loc3
