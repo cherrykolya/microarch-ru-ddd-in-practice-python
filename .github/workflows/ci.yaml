@@ -7,7 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  lint-test-coverage:
+  lint:
+    name: Lint (pre-commit)
     runs-on: ubuntu-latest
 
     steps:
@@ -25,9 +26,27 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-root
 
-      - name: Run pre-commit hooks
+      - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
 
-      - name: Run tests with coverage
-        run: |
-          poetry run pytest --cov=core --cov-report=xml
+  test:
+    name: Test + Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --no-root
+
+      - name: Run pytest with coverage
+        run: poetry run pytest --cov=core --cov-report=xml
