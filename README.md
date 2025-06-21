@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/cherrykolya/microarch-ru-ddd-in-practice-python/branch/main/graph/badge.svg)](https://codecov.io/gh/cherrykolya/microarch-ru-ddd-in-practice-python)
+
 # Демо проект к курсу "Domain Driven Design и Clean Architecture на языке C#"
 
 📚 Подробнее о курсе: [microarch.ru/courses/ddd/languages/csharp](http://microarch.ru/courses/ddd/languages/csharp)
@@ -10,7 +12,7 @@
 
 ---
 
-# OpenApi 
+# OpenApi
 Вызывать из папки DeliveryApp.Api/Adapters/Http/Contract
 ```
 cd DeliveryApp.Api/Adapters/Http/Contract/
@@ -46,7 +48,7 @@ DELETE FROM public.orders;
 DELETE FROM public.outbox;
 
 -- Добавить курьеров
-    
+
 -- Пеший
 INSERT INTO public.transports(
     id, name, speed)
@@ -69,10 +71,10 @@ INSERT INTO public.transports(
 VALUES ('c24d3116-a75c-4a4b-9b22-1a7dc95a8c79', 'Машина', 3);
 INSERT INTO public.couriers(
     id, name, transport_id, location_x, location_y, status)
-VALUES ('407f68be-5adf-4e72-81bc-b1d8e9574cf8', 'Авто', 'c24d3116-a75c-4a4b-9b22-1a7dc95a8c79', 7,9, 'free');     
+VALUES ('407f68be-5adf-4e72-81bc-b1d8e9574cf8', 'Авто', 'c24d3116-a75c-4a4b-9b22-1a7dc95a8c79', 7,9, 'free');
 ```
 
 ## Лицензия
 
-Код распространяется под лицензией [MIT](./LICENSE).  
+Код распространяется под лицензией [MIT](./LICENSE).
 © 2025 microarch.ru
