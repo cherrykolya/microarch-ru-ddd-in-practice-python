@@ -16,7 +16,7 @@ class Courier(BaseModel):
     name: str = Field(..., description="")
     speed: int = Field(...)
     location: Location = Field()
-    storage_places: list[StoragePlace] | None = Field(None)
+    storage_places: list[StoragePlace] = Field()
 
     def __init__(self, **data):
         raise TypeError("Direct instantiation is not allowed. Use Courier.create()")
@@ -45,7 +45,7 @@ class Courier(BaseModel):
 
         return None
 
-    def get_storage_place_by_order_id(self, order_id: int) -> StoragePlace:
+    def get_storage_place_by_order_id(self, order_id: UUID) -> StoragePlace:
         for storage_place in self.storage_places:
             if storage_place.order_id == order_id:
                 return storage_place
@@ -61,6 +61,10 @@ class Courier(BaseModel):
             raise ValueError("Cant take order")
 
         storage_place = self.get_first_available_storage_place(order.volume)
+
+        if storage_place is None:
+            raise ValueError("Cant take order")
+
         storage_place.store(order.id, order.volume)
 
         # Нужно ли здесь проставлять id курьера в заказ?

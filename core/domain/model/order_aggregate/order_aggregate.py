@@ -10,7 +10,7 @@ class Order(BaseModel):
     id: UUID = Field(..., description="The unique identifier for the order.")
     location: Location = Field(..., description="The location where the order is being placed.")
     volume: int = Field(..., description="The volume of the order.")
-    order_status: OrderStatus | None = Field(None, description="The status of the order.")
+    order_status: OrderStatus = Field(..., description="The status of the order.")
     courier_id: UUID | None = Field(None, description="The ID of the courier assigned to the order.")
 
     def __init__(self, **data):
