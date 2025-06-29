@@ -7,28 +7,18 @@ from core.domain.model.order_aggregate.order_aggregate import Order
 from core.domain.shared_kernel.location import Location
 
 
-@pytest.fixture
-def location() -> Location:
-    return Location.create(1, 1)
-
-
-@pytest.fixture
-def courier(location) -> Courier:
-    return Courier.create(name="John", speed=2, location=location)
-
-
-def test_create_courier_success(location: Location):
-    courier = Courier.create(name="Jane", speed=3, location=location)
+def test_create_courier_success(default_location: Location):
+    courier = Courier.create(name="Jane", speed=3, location=default_location)
     assert courier.name == "Jane"
     assert courier.speed == 3
-    assert courier.location == location
+    assert courier.location == default_location
     assert courier.storage_places is not None
     assert len(courier.storage_places) == 1
 
 
-def test_create_courier_invalid_speed(location):
+def test_create_courier_invalid_speed(default_location: Location):
     with pytest.raises(ValueError, match="Speed must be greater than 0"):
-        Courier.create(name="Jane", speed=0, location=location)
+        Courier.create(name="Jane", speed=0, location=default_location)
 
 
 def test_add_storage_place(courier: Courier):

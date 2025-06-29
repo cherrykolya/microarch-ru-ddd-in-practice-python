@@ -12,29 +12,34 @@ def location():
     return Location(x=5, y=5)
 
 
-def test_create_order_success(location):
+def test_create_order_success(default_location: Location, default_order_volume: int):
     order_id = uuid4()
-    order = Order.create(order_id=order_id, location=location, volume=10)
+    order = Order.create(order_id=order_id, location=default_location, volume=default_order_volume)
 
     assert order.id == order_id
-    assert order.location == location
-    assert order.volume == 10
+    assert order.location == default_location
+    assert order.volume == default_order_volume
     assert order.order_status.name == OrderStatusEnum.CREATED
     assert order.courier_id is None
 
 
-def test_create_order_invalid_volume(location):
+def test_create_order_invalid_volume(default_location: Location):
     with pytest.raises(ValueError, match="Volume must be greater than 0"):
-        Order.create(order_id=uuid4(), location=location, volume=0)
+        Order.create(order_id=uuid4(), location=default_location, volume=0)
 
 
-def test_direct_instantiation_raises(location):
+def test_direct_instantiation_raises(default_location: Location, default_order_volume: int):
     with pytest.raises(TypeError, match="Direct instantiation is not allowed"):
-        Order(id=uuid4(), location=location, volume=10, order_status=OrderStatus.created(), courier_id=None)
+        Order(
+            id=uuid4(),
+            location=default_location,
+            volume=default_order_volume,
+            order_status=OrderStatus.created(),
+            courier_id=None,
+        )
 
 
-def test_assign_success(location):
-    order = Order.create(order_id=uuid4(), location=location, volume=5)
+def test_assign_success(order: Order):
     courier_id = uuid4()
     order.assign(courier_id)
 
@@ -42,8 +47,7 @@ def test_assign_success(location):
     assert order.order_status.name == OrderStatusEnum.ASSIGNED
 
 
-def test_assign_twice_raises(location):
-    order = Order.create(order_id=uuid4(), location=location, volume=5)
+def test_assign_twice_raises(order: Order):
     courier_id = uuid4()
     order.assign(courier_id)
 
@@ -51,23 +55,19 @@ def test_assign_twice_raises(location):
         order.assign(uuid4())
 
 
-def test_complete_success(location):
-    order = Order.create(order_id=uuid4(), location=location, volume=5)
+def test_complete_success(order: Order):
     order.assign(uuid4())
     order.complete()
 
     assert order.order_status.name == OrderStatusEnum.COMPLETED
 
 
-def test_complete_without_assign_raises(location):
-    order = Order.create(order_id=uuid4(), location=location, volume=5)
-
+def test_complete_without_assign_raises(order: Order):
     with pytest.raises(ValueError, match="Courier not assigned"):
         order.complete()
 
 
-def test_complete_wrong_state_raises(location):
-    order = Order.create(order_id=uuid4(), location=location, volume=5)
+def test_complete_wrong_state_raises(order: Order):
     order.assign(uuid4())
     order.order_status = OrderStatus.created()  # симулируем сломанную логику
 
