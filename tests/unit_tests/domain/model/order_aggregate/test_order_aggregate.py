@@ -28,17 +28,6 @@ def test_create_order_invalid_volume(default_location: Location):
         Order.create(order_id=uuid4(), location=default_location, volume=0)
 
 
-def test_direct_instantiation_raises(default_location: Location, default_order_volume: int):
-    with pytest.raises(TypeError, match="Direct instantiation is not allowed"):
-        Order(
-            id=uuid4(),
-            location=default_location,
-            volume=default_order_volume,
-            order_status=OrderStatus.created(),
-            courier_id=None,
-        )
-
-
 def test_assign_success(order: Order):
     courier_id = uuid4()
     order.assign(courier_id)

@@ -1,21 +1,28 @@
-# Dockerfile for FastAPI
+# Используем официальный образ Python
 FROM python:3.11-slim
 
-# Install Poetry
-RUN pip install poetry
-
-# Set the working directory
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Copy the pyproject.toml and poetry.lock files
+# Устанавливаем зависимости для сборки
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем файлы зависимостей
 COPY pyproject.toml poetry.lock ./
 
-# Install dependencies
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+# Устанавливаем poetry и зависимости
+RUN pip install poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi  --no-root
 
-# Copy the application code
+# Копируем код приложения
 COPY . .
 
-# Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+# Открываем порт
+EXPOSE 8000
+
+# Запускаем приложение
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,6 +1,14 @@
+import asyncio
+from typing import AsyncGenerator, Generator
 from uuid import uuid4
 
 import pytest
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import event
+from sqlalchemy.engine import Transaction
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from testcontainers.postgres import PostgresContainer
 
 from core.domain.model.courier_aggregate.courier_aggregate import Courier
 from core.domain.model.order_aggregate.order_aggregate import Order
@@ -68,3 +76,87 @@ def order_location() -> Location:
 def dispatch_order(order_location: Location, default_order_volume: int) -> Order:
     """Заказ для тестов диспетчера с особой локацией."""
     return Order.create(order_id=uuid4(), location=order_location, volume=default_order_volume)
+
+
+@pytest.fixture(scope="session")
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
+    """Create an instance of the default event loop for the test session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest.fixture(scope="session")
+async def postgres_container() -> AsyncGenerator[PostgresContainer, None]:
+    """Create a PostgreSQL container for testing."""
+    postgres = PostgresContainer("postgres:15-alpine")
+    postgres.start()
+    yield postgres
+    postgres.stop()
+
+
+@pytest.fixture(scope="session")
+def alembic_config(postgres_container: PostgresContainer) -> Config:
+    """Create Alembic config for test database."""
+    config = Config("alembic.ini")
+    config.set_main_option(
+        "sqlalchemy.url",
+        postgres_container.get_connection_url().replace("postgresql+psycopg2://", "postgresql+asyncpg://"),
+    )
+    return config
+
+
+@pytest.fixture(scope="session")
+def apply_migrations(alembic_config: Config):
+    """Apply migrations to test database."""
+    command.upgrade(alembic_config, "head")
+    yield
+    command.downgrade(alembic_config, "base")
+
+
+@pytest.fixture(scope="session")
+async def engine(postgres_container: PostgresContainer, apply_migrations):
+    """Create engine connected to test database with applied migrations."""
+    engine = create_async_engine(
+        postgres_container.get_connection_url().replace("postgresql+psycopg2://", "postgresql+asyncpg://"),
+        echo=True,
+    )
+    yield engine
+    await engine.dispose()
+
+
+# @pytest.fixture
+# async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
+#     """Create database session for testing with automatic rollback."""
+#     async_session = async_sessionmaker(
+#         engine, class_=AsyncSession, expire_on_commit=False
+#     )
+#     async with async_session() as session:
+#         yield session
+#         await session.rollback()
+
+
+@pytest.fixture
+async def db_session_with_commit(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
+    """Create database session that commits changes."""
+    connection = await engine.connect()
+    transaction = await connection.begin()
+    session = AsyncSession(bind=connection, expire_on_commit=False, future=True, autoflush=False)
+    await connection.begin_nested()
+
+    @event.listens_for(session.sync_session, "after_transaction_end")
+    def end_savepoint(session: AsyncSession, transaction: Transaction) -> None:
+        """async events are not implemented yet, recreates savepoints to avoid final commits"""
+        # https://github.com/sqlalchemy/sqlalchemy/issues/5811#issuecomment-756269881
+        if connection.closed:
+            return
+        if not connection.in_nested_transaction():
+            connection.sync_connection.begin_nested()
+
+    try:
+        yield session
+    finally:
+        if session.in_transaction():  # pylint: disable=no-member
+            await transaction.rollback()
+
+        await connection.close()
