@@ -89,10 +89,8 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 @pytest.fixture(scope="session")
 async def postgres_container() -> AsyncGenerator[PostgresContainer, None]:
     """Create a PostgreSQL container for testing."""
-    postgres = PostgresContainer("postgres:15-alpine")
-    postgres.start()
-    yield postgres
-    postgres.stop()
+    with PostgresContainer("postgres:15-alpine") as container:
+        yield container
 
 
 @pytest.fixture(scope="session")
@@ -123,17 +121,6 @@ async def engine(postgres_container: PostgresContainer, apply_migrations):
     )
     yield engine
     await engine.dispose()
-
-
-# @pytest.fixture
-# async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
-#     """Create database session for testing with automatic rollback."""
-#     async_session = async_sessionmaker(
-#         engine, class_=AsyncSession, expire_on_commit=False
-#     )
-#     async with async_session() as session:
-#         yield session
-#         await session.rollback()
 
 
 @pytest.fixture
