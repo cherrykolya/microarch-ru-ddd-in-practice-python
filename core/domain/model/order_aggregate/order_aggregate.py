@@ -13,8 +13,8 @@ class Order(BaseModel):
     order_status: OrderStatus = Field(..., description="The status of the order.")
     courier_id: UUID | None = Field(None, description="The ID of the courier assigned to the order.")
 
-    def __init__(self, **data):
-        raise TypeError("Direct instantiation is not allowed. Use Order.create()")
+    # def __init__(self, **data):
+    #     raise TypeError("Direct instantiation is not allowed. Use Order.create()")
 
     @classmethod
     def create(cls, order_id: UUID, location: Location, volume: int) -> "Order":
