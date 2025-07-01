@@ -19,6 +19,7 @@ sqlalchemy = {extras = ["asyncio"], version = "^2.0.27"}
 alembic = "^1.13.1"
 asyncpg = "0.29.0"
 docker = "^7.0.0"
+dependency-injector = "^4.48.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
