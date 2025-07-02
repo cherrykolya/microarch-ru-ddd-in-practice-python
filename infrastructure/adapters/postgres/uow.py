@@ -1,19 +1,21 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from infrastructure.adapters.postgres.repositories.courier_repository import CourierRepository
-from infrastructure.adapters.postgres.repositories.order_repository import OrderRepository
+from core.ports.unit_of_work import UnitOfWork as UnitOfWorkInterface
 
 
-class UnitOfWork:
+class UnitOfWork(UnitOfWorkInterface):
     def __init__(self, session: AsyncSession):
         self.session = session
-        self.courier_repository = CourierRepository(session)
-        self.order_repository = OrderRepository(session)
 
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None:
+            await self.rollback()
+        else:
+            await self.commit()
+
         await self.session.close()
 
     async def commit(self):

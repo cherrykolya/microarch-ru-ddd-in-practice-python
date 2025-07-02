@@ -6,5 +6,5 @@ from core.domain.model.order_aggregate.order_aggregate import Order
 
 class DispatcherInterface(ABC):
     @abstractmethod
-    def dispatch(self, couriers: list[Courier], order: Order) -> None:
+    def dispatch(self, couriers: list[Courier], order: Order) -> Courier:
         pass
