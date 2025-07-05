@@ -1,3 +1,5 @@
+from typing import AsyncContextManager, Callable
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from infrastructure.config.settings import get_settings
@@ -10,9 +12,14 @@ engine = create_async_engine(
     **db_settings.get_sqlalchemy_config(),
 )
 
-async_session = async_sessionmaker(
+async_session_maker = async_sessionmaker(
     engine,
     expire_on_commit=False,
     class_=AsyncSession,
     autoflush=False,
 )
+
+
+def get_db_session() -> Callable[[], AsyncContextManager[AsyncSession]]:
+    """Возвращает фабрику сессий."""
+    return async_session_maker
