@@ -1,55 +1,52 @@
 from uuid import uuid4
 
 import pytest
-from dependency_injector.providers import Resource
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.application.use_cases.queries.get_not_completed_orders import (
-    GetNotCompletedOrdersQuery,
-    GetNotCompletedOrdersUseCase,
-)
+from core.application.use_cases.queries.get_not_completed_orders import GetNotCompletedOrdersQuery
 from core.domain.model.courier_aggregate.courier_aggregate import Courier
 from core.domain.model.order_aggregate.order_aggregate import Order
 from core.domain.shared_kernel.location import Location
-from infrastructure.adapters.postgres.repositories.courier_repository import CourierRepository
-from infrastructure.adapters.postgres.repositories.order_repository import OrderRepository
 from infrastructure.di.container import Container
 
 
 @pytest.mark.asyncio
-async def test_get_not_completed_orders(db_session_with_commit: AsyncSession):
-    # Создаем контейнер
-    container = Container()
+async def test_get_not_completed_orders(test_container: Container):
+    uow = test_container.unit_of_work()
+    get_not_completed_orders = test_container.get_not_completed_orders_use_case()
 
-    # Переопределяем провайдер сессии, чтобы использовать сессию из фикстуры
-    container.db_session.override(Resource(lambda: db_session_with_commit))
+    async with uow:
+        # Create test courier
+        courier = Courier.create(
+            name="Test Courier",
+            speed=10,
+            location=Location.create(x=1, y=1),
+        )
+        await uow.courier_repository.add_courier(courier)
 
-    container.init_resources()
+        # Create order with CREATED status
+        created_order = Order.create(
+            order_id=uuid4(),
+            location=Location.create(x=1, y=1),
+            volume=100,
+        )
+        await uow.order_repository.add_order(created_order)
 
-    # Arrange
-    repository: OrderRepository = await container.order_repository()
+        # Create order with COMPLETED status
+        completed_order = Order.create(
+            order_id=uuid4(),
+            location=Location.create(x=2, y=2),
+            volume=1,
+        )
+        courier.take_order(completed_order)
+        courier.complete_order(completed_order)
+        await uow.order_repository.add_order(completed_order)
+        await uow.courier_repository.update_courier(courier)
+        await uow.commit()
 
-    courier_repository: CourierRepository = await container.courier_repository()
-    courier = Courier.create(name="Test Courier", location=Location.create(x=1, y=1), speed=10)
-    await courier_repository.add_courier(courier)
-
-    # Создаем заказ со статусом CREATED
-    location1 = Location.create(x=1, y=1)
-    created_order = Order.create(order_id=uuid4(), location=location1, volume=100)
-    await repository.add_order(created_order)
-
-    # Создаем заказ со статусом ASSIGNED
-    location2 = Location.create(x=2, y=2)
-    assigned_order1 = Order.create(order_id=uuid4(), location=location2, volume=1)
-    courier.take_order(assigned_order1)
-    courier.complete_order(assigned_order1)
-    await repository.add_order(assigned_order1)
-    await courier_repository.update_courier(courier)
-
-    # Получаем use case из контейнера
-    get_not_completed_orders: GetNotCompletedOrdersUseCase = await container.get_not_completed_orders_use_case()
-
-    # Используем use case
+    # Act
     result = await get_not_completed_orders.handle(GetNotCompletedOrdersQuery())
 
+    # Assert
     assert result is not None
+    assert len(result) == 1
+    assert result[0].id == created_order.id

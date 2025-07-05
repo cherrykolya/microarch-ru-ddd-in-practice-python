@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 
-from sqlalchemy import delete, func, insert, select
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.domain.model.courier_aggregate.courier_aggregate import Courier
@@ -64,6 +64,7 @@ class CourierRepository(CourierRepositoryInterface):
         # Определяем какие связи нужно добавить, а какие удалить
         to_add = set(new_storage_places.keys()) - set(existing_storage_places.keys())
         to_remove = set(existing_storage_places.keys()) - set(new_storage_places.keys())
+        to_update = set(existing_storage_places.keys()) & set(new_storage_places.keys())
 
         if to_remove:
             # Удаляем только те связи, которых нет в новом наборе
@@ -90,6 +91,25 @@ class CourierRepository(CourierRepositoryInterface):
             ]
             stmt = insert(CourierStoragePlaceModel).values(new_courier_storage_values)
             await self.session.execute(stmt)
+
+        if to_update:
+            # Обновляем существующие места хранения
+            for sp_id in to_update:
+                new_sp = new_storage_places[sp_id]
+                existing_sp = existing_storage_places[sp_id]
+
+                # Обновляем только если есть изменения
+                if (
+                    existing_sp.name != new_sp.name
+                    or existing_sp.total_volume != new_sp.total_volume
+                    or existing_sp.order_id != new_sp.order_id
+                ):
+                    update_query = (
+                        update(StoragePlaceModel)
+                        .where(StoragePlaceModel.id == sp_id)
+                        .values(name=new_sp.name, total_volume=new_sp.total_volume, order_id=new_sp.order_id)
+                    )
+                    await self.session.execute(update_query)
 
         await self.session.refresh(existing_courier, ["storage_places"])
 
