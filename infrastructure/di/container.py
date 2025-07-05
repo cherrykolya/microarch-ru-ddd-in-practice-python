@@ -58,10 +58,10 @@ class Container(containers.DeclarativeContainer):
 
     get_not_completed_orders_use_case = providers.Factory(
         GetNotCompletedOrdersUseCase,
-        session=db_session_factory,
+        uow=unit_of_work,
     )
 
     get_all_busy_couriers_use_case = providers.Factory(
         GetAllBusyCouriersUseCase,
-        session=db_session_factory,
+        uow=unit_of_work,
     )
