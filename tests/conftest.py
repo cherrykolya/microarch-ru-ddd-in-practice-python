@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from dependency_injector import providers
 from sqlalchemy import event
 from sqlalchemy.engine import Transaction
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
@@ -14,6 +15,85 @@ from core.domain.model.courier_aggregate.courier_aggregate import Courier
 from core.domain.model.order_aggregate.order_aggregate import Order
 from core.domain.services.dispatch_service import Dispatcher
 from core.domain.shared_kernel.location import Location
+from core.ports.unit_of_work import UnitOfWork
+from infrastructure.adapters.postgres.repositories.courier_repository import CourierRepository
+from infrastructure.adapters.postgres.repositories.order_repository import OrderRepository
+from infrastructure.di.container import Container
+
+
+class TestUnitOfWork(UnitOfWork):
+    """Тестовый UoW, который использует одну сессию для всех операций."""
+
+    def __init__(self, session: AsyncSession):
+        self._session = session
+        self._courier_repository = CourierRepository(session)
+        self._order_repository = OrderRepository(session)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            await self.rollback()
+        await self.commit()
+
+    async def commit(self):
+        await self._session.commit()
+
+    async def rollback(self):
+        await self._session.rollback()
+
+    @property
+    def courier_repository(self) -> CourierRepository:
+        return self._courier_repository
+
+    @property
+    def order_repository(self) -> OrderRepository:
+        return self._order_repository
+
+    @property
+    def session(self):
+        return self._session
+
+
+class TestContainer(Container):
+    """Тестовый контейнер с переопределенными зависимостями."""
+
+    config = providers.Configuration()
+
+    # Сессия БД
+    db_session = providers.Dependency(AsyncSession)
+
+    # Unit of Work
+    unit_of_work = providers.Factory(
+        TestUnitOfWork,
+        session=db_session,
+    )
+
+    # Сервисы
+    dispatcher = providers.Factory(Dispatcher)
+
+    # Use cases
+    assign_orders_use_case = providers.Factory(
+        "core.application.use_cases.commands.assign_orders.AssignOrdersUseCase",
+        uow=unit_of_work,
+        dispatcher=dispatcher,
+    )
+
+    move_couriers_use_case = providers.Factory(
+        "core.application.use_cases.commands.move_couriers.MoveCouriersUseCase",
+        uow=unit_of_work,
+    )
+
+    get_all_busy_couriers_use_case = providers.Factory(
+        "core.application.use_cases.queries.get_all_busy_couriers.GetAllBusyCouriersUseCase",
+        uow=unit_of_work,
+    )
+
+    get_not_completed_orders_use_case = providers.Factory(
+        "core.application.use_cases.queries.get_not_completed_orders.GetNotCompletedOrdersUseCase",
+        uow=unit_of_work,
+    )
 
 
 @pytest.fixture
@@ -81,7 +161,9 @@ def dispatch_order(order_location: Location, default_order_volume: int) -> Order
 @pytest.fixture(scope="session")
 def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
+    policy = asyncio.get_event_loop_policy()
+    loop = policy.new_event_loop()
+    asyncio.set_event_loop(loop)
     yield loop
     loop.close()
 
@@ -113,8 +195,8 @@ def apply_migrations(alembic_config: Config):
 
 
 @pytest.fixture(scope="session")
-async def engine(postgres_container: PostgresContainer, apply_migrations):
-    """Create engine connected to test database with applied migrations."""
+async def engine(postgres_container: PostgresContainer, apply_migrations) -> AsyncGenerator[AsyncEngine, None]:
+    """Создает движок БД для тестов."""
     engine = create_async_engine(
         postgres_container.get_connection_url().replace("postgresql+psycopg2://", "postgresql+asyncpg://"),
         echo=True,
@@ -125,7 +207,6 @@ async def engine(postgres_container: PostgresContainer, apply_migrations):
 
 @pytest.fixture
 async def db_session_with_commit(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
-    """Create database session that commits changes."""
     connection = await engine.connect()
     transaction = await connection.begin()
     session = AsyncSession(bind=connection, expire_on_commit=False, future=True, autoflush=False)
@@ -147,3 +228,14 @@ async def db_session_with_commit(engine: AsyncEngine) -> AsyncGenerator[AsyncSes
             await transaction.rollback()
 
         await connection.close()
+
+
+@pytest.fixture
+def test_container(db_session_with_commit: AsyncSession) -> Generator[Container, None, None]:
+    """Создает тестовый контейнер с замоканным UoW."""
+    container = TestContainer()
+    container.db_session.override(providers.Object(db_session_with_commit))
+    container.init_resources()
+
+    yield container
+    container.shutdown_resources()

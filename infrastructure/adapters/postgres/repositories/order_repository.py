@@ -49,6 +49,7 @@ class OrderRepository(OrderRepositoryInterface):
         query = (
             select(OrderModel)
             .filter(OrderModel.order_status == OrderStatusEnum.CREATED)
+            .limit(1)
             .execution_options(populate_existing=True)
         )
         result = await self.session.execute(query)
