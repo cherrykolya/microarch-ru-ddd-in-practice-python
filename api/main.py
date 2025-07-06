@@ -22,10 +22,6 @@ def get_application() -> FastAPI:
             __name__,
             "api.adapters.http.controllers",
         ],
-        # packages=[
-        #     "api.adapters",  # FastAPI endpoints
-        #     "core.application.use_cases",  # use cases с @inject
-        # ],
     )  # включая assign_orders_job
 
     # Configure FastAPI logging

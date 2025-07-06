@@ -12,8 +12,8 @@ from api.logging_config import logger
 async def lifespan(app: FastAPI):
     scheduler = AsyncIOScheduler()
     logger.info("Starting scheduler...")
-    scheduler.add_job(run_assign_orders_job, trigger="interval", seconds=5)
-    scheduler.add_job(run_move_couriers_job, trigger="interval", seconds=5)
+    scheduler.add_job(run_assign_orders_job, trigger="interval", seconds=2)
+    scheduler.add_job(run_move_couriers_job, trigger="interval", seconds=2)
     scheduler.start()
     yield
     scheduler.shutdown()

@@ -11,9 +11,9 @@ class DatabaseSettings(BaseSettings):
     DRIVER: str = Field(default="postgresql+asyncpg")
     HOST: str = Field(default="localhost")
     PORT: int = Field(default=5432)
-    USER: str = Field(default="postgres")
-    PASSWORD: SecretStr = Field(default=SecretStr("postgres"))
-    DATABASE: str = Field(default="delivery_app")
+    USER: str = Field(default="username")
+    PASSWORD: SecretStr = Field(default=SecretStr("secret"))
+    DATABASE: str = Field(default="delivery")
 
     ECHO: bool = Field(default=False)
     POOL_SIZE: int = Field(default=50)

@@ -36,7 +36,7 @@ async def create_courier(
     await use_case.handle(command)
 
 
-@router.get("/api/v1/couriers", response_model=List[CourierTest], responses={"default": {"model": Error}})
+@router.get("/couriers", response_model=List[CourierTest], responses={"default": {"model": Error}})
 @inject
 async def get_couriers(
     use_case: GetAllCouriersUseCase = Depends(Provide[Container.get_all_couriers_use_case]),
