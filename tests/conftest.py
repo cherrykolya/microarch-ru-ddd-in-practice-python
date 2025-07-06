@@ -21,6 +21,14 @@ from infrastructure.adapters.postgres.repositories.order_repository import Order
 from infrastructure.di.container import Container
 
 
+class MockGeoService:
+    """Мок-сервис для работы с геолокацией."""
+
+    async def get_location(self, address: str) -> Location:
+        """Возвращает случайную локацию для любого адреса."""
+        return Location.create_random()
+
+
 class TestUnitOfWork(UnitOfWork):
     """Тестовый UoW, который использует одну сессию для всех операций."""
 
@@ -72,6 +80,7 @@ class TestContainer(Container):
 
     # Сервисы
     dispatcher = providers.Factory(Dispatcher)
+    geo_service = providers.Singleton(MockGeoService)
 
     # Use cases
     assign_orders_use_case = providers.Factory(
@@ -93,6 +102,12 @@ class TestContainer(Container):
     get_not_completed_orders_use_case = providers.Factory(
         "core.application.use_cases.queries.get_not_completed_orders.GetNotCompletedOrdersUseCase",
         uow=unit_of_work,
+    )
+
+    create_order_use_case = providers.Factory(
+        "core.application.use_cases.commands.create_order.CreateOrderUseCase",
+        uow=unit_of_work,
+        geo_service=geo_service,
     )
 
 
