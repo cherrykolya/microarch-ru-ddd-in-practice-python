@@ -30,8 +30,13 @@ class MoveCouriersUseCase(CommandHandler):
 
                 courier.move_towards(order.location)
 
+                await self.uow.courier_repository.update_courier(courier)
+
                 if courier.location == order.location:
+                    logging.info(f"Courier {courier.id} completed order {order.id}")
                     courier.complete_order(order)
                     await self.uow.order_repository.update_order(order)
 
                 await self.uow.courier_repository.update_courier(courier)
+
+                logging.info(f"Courier {courier.id} moved to {courier.location}")

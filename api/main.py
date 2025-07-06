@@ -3,13 +3,30 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.adapters.http.controllers import router
 from api.config import get_settings
 from api.lifespan import lifespan
 from api.logging_config import log_config, logger
+from infrastructure.di.container import Container
 
 
 def get_application() -> FastAPI:
     settings = get_settings()
+
+    container = Container()
+    container.init_resources()
+    container.wire(
+        modules=[
+            "api.lifespan",
+            "api.adapters.background_jobs.assign_orders_job",
+            __name__,
+            "api.adapters.http.controllers",
+        ],
+        # packages=[
+        #     "api.adapters",  # FastAPI endpoints
+        #     "core.application.use_cases",  # use cases с @inject
+        # ],
+    )  # включая assign_orders_job
 
     # Configure FastAPI logging
     logging.getLogger("uvicorn.access").handlers = logging.getLogger(log_config.LOGGER_NAME).handlers
@@ -24,6 +41,9 @@ def get_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    application.state.container = container
+
+    application.include_router(router)
 
     return application
 

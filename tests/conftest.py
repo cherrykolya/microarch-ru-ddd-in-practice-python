@@ -239,9 +239,3 @@ def test_container(db_session_with_commit: AsyncSession) -> Generator[Container,
 
     yield container
     container.shutdown_resources()
-
-
-# @pytest.fixture
-# async def get_db_session_factory(engine: AsyncEngine) -> Callable[[], AsyncContextManager[AsyncSession]]:
-#     """Create a database session factory."""
-#     return async_sessionmaker(engine, expire_on_commit=False, future=True, autoflush=False)
