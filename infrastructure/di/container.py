@@ -19,10 +19,6 @@ from infrastructure.config.settings import Settings
 class Container(containers.DeclarativeContainer):
     """IoC контейнер приложения."""
 
-    # wiring_config = containers.WiringConfiguration(
-    #     packages=["api"],  # все пакеты, где будет @inject + Provide
-    # )
-
     config = providers.Singleton(Settings)
 
     # Database
