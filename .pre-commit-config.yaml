@@ -16,6 +16,7 @@ repos:
         entry: poetry run ruff check
         types_or: [ python, pyi ]
         args: [ '--force-exclude' ]
+        exclude: ^infrastructure/adapters/grpc/geo/
 
       - id: isort
         name: isort
@@ -24,6 +25,7 @@ repos:
         require_serial: true
         types_or: [ cython, pyi, python ]
         args: [ '--filter-files', '--profile', 'black' ]
+        exclude: ^infrastructure/adapters/grpc/geo/
 
       - id: black
         name: black
@@ -31,3 +33,4 @@ repos:
         entry: poetry run black
         require_serial: true
         types_or: [ python, pyi ]
+        exclude: ^infrastructure/adapters/grpc/geo/

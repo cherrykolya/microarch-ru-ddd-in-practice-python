@@ -11,19 +11,27 @@ from core.application.use_cases.queries.get_all_busy_couriers import GetAllBusyC
 from core.application.use_cases.queries.get_all_couriers import GetAllCouriersUseCase
 from core.application.use_cases.queries.get_not_completed_orders import GetNotCompletedOrdersUseCase
 from core.domain.services.dispatch_service import Dispatcher
+from infrastructure.adapters.grpc.geo.client import GRPCGeoService
 from infrastructure.adapters.postgres.session import get_db_session
 from infrastructure.adapters.postgres.uow import UnitOfWork as PostgresUnitOfWork
-from infrastructure.config.settings import Settings
+from infrastructure.config.settings import Settings, get_settings
 
 
 class Container(containers.DeclarativeContainer):
     """IoC контейнер приложения."""
 
-    config = providers.Singleton(Settings)
+    config: providers.Singleton[Settings] = providers.Singleton(get_settings)
 
     # Database
     db_session_factory: providers.Resource[Callable[[], AsyncContextManager[AsyncSession]]] = providers.Resource(
         get_db_session
+    )
+
+    # Geo Service
+    geo_service = providers.Factory(
+        GRPCGeoService,
+        host=config().geo_service.host,
+        port=config().geo_service.port,
     )
 
     # Unit of Work
@@ -47,6 +55,7 @@ class Container(containers.DeclarativeContainer):
     create_order_use_case = providers.Factory(
         CreateOrderUseCase,
         uow=unit_of_work,
+        geo_service=geo_service,
     )
 
     move_couriers_use_case = providers.Factory(
