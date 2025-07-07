@@ -50,7 +50,7 @@ poetry run pytest                       # запуск всех тестов
 | Alembic | ^1.12.1 | Инструмент для управления миграциями базы данных | [Docs](https://alembic.sqlalchemy.org/) |
 | Pydantic | ^2.5.0 | Библиотека для валидации данных и сериализации | [Docs](https://docs.pydantic.dev/) |
 | gRPC | ^1.59.0 | Фреймворк для межсервисного взаимодействия | [Docs](https://grpc.io/docs/languages/python/) |
-| Kafka-Python | ^2.0.2 | Клиент для работы с Apache Kafka | [Docs](https://kafka-python.readthedocs.io/) |
+| aiokafka | ^0.10.0 | Асинхронный клиент для работы с Apache Kafka | [Docs](https://aiokafka.readthedocs.io/) |
 | Pytest | ^7.4.3 | Фреймворк для модульного и интеграционного тестирования | [Docs](https://docs.pytest.org/) |
 | Dependency Injector | ^4.41.0 | Библиотека для управления зависимостями и инверсии управления | [Docs](https://python-dependency-injector.ets-labs.org/) |
 | Docker | N/A | Платформа для контейнеризации приложений | [Docs](https://docs.docker.com/) |
