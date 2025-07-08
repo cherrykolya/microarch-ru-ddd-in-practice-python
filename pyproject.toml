@@ -11,7 +11,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
-fastapi = "^0.109.2"
+fastapi = "^0.112.2"
 uvicorn = "^0.27.1"
 pydantic = "^2.6.1"
 pydantic-settings = "^2.1.0"
@@ -22,6 +22,8 @@ docker = "^7.0.0"
 dependency-injector = "^4.48.1"
 apscheduler = "^3.11.0"
 grpclib = {extras = ["protobuf"], version = "^0.4.8"}
+faststream = {extras = ["kafka"], version = "^0.5.44"}
+python-json-logger = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"

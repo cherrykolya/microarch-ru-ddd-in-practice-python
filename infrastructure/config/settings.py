@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from infrastructure.config.database import DatabaseSettings
 from infrastructure.config.geo_service import GeoServiceSettings
+from infrastructure.config.kafka import KafkaSettings
 
 
 class Settings(BaseSettings):
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
     # Настройки базы данных
     database: DatabaseSettings = DatabaseSettings()
     geo_service: GeoServiceSettings = GeoServiceSettings()
+    kafka: KafkaSettings = KafkaSettings()
 
     # Здесь могут быть другие настройки приложения
     # например, для API, кэширования, очередей и т.д.
