@@ -1,5 +1,6 @@
 from typing import AsyncContextManager, Callable
 
+from aiokafka import AIOKafkaProducer
 from dependency_injector import containers, providers
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +12,9 @@ from core.application.use_cases.queries.get_all_busy_couriers import GetAllBusyC
 from core.application.use_cases.queries.get_all_couriers import GetAllCouriersUseCase
 from core.application.use_cases.queries.get_not_completed_orders import GetNotCompletedOrdersUseCase
 from core.domain.services.dispatch_service import Dispatcher
+from core.ports.event_publisher_interface import EventPublisherInterface
 from infrastructure.adapters.grpc.geo.client import GRPCGeoService
+from infrastructure.adapters.kafka.event_publisher import KafkaEventPublisher, get_kafka_producer
 from infrastructure.adapters.postgres.session import get_db_session
 from infrastructure.adapters.postgres.uow import UnitOfWork as PostgresUnitOfWork
 from infrastructure.config.settings import Settings, get_settings
@@ -20,11 +23,19 @@ from infrastructure.config.settings import Settings, get_settings
 class Container(containers.DeclarativeContainer):
     """IoC контейнер приложения."""
 
-    config: providers.Singleton[Settings] = providers.Singleton(get_settings)
+    config: providers.Provider[Settings] = providers.Singleton(get_settings)
 
     # Database
-    db_session_factory: providers.Resource[Callable[[], AsyncContextManager[AsyncSession]]] = providers.Resource(
+    db_session_factory: providers.Provider[Callable[[], AsyncContextManager[AsyncSession]]] = providers.Resource(
         get_db_session
+    )
+
+    # Kafka
+    kafka_producer: providers.Provider[AIOKafkaProducer] = providers.Factory(get_kafka_producer)
+
+    kafka_event_publisher: providers.Provider[EventPublisherInterface] = providers.Factory(
+        KafkaEventPublisher,
+        kafka_producer=kafka_producer,
     )
 
     # Geo Service
@@ -38,6 +49,7 @@ class Container(containers.DeclarativeContainer):
     unit_of_work = providers.Factory(
         PostgresUnitOfWork,
         session_factory=db_session_factory,
+        event_publisher=kafka_event_publisher,
     )
 
     # Domain Services

@@ -14,6 +14,7 @@ from infrastructure.adapters.postgres.models.courier_aggregate import (
 
 class CourierRepository(CourierRepositoryInterface):
     def __init__(self, session: AsyncSession):
+        super().__init__()
         self.session = session
 
     async def add_courier(self, courier: Courier) -> Courier:

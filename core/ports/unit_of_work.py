@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
+from core.ports.base_repository_interface import BaseRepository
 from core.ports.courier_repository_interface import CourierRepositoryInterface
+from core.ports.event_publisher_interface import EventPublisherInterface
 from core.ports.order_repository_interface import OrderRepositoryInterface
 
 
@@ -9,6 +11,8 @@ class UnitOfWork(ABC):
 
     courier_repository: CourierRepositoryInterface
     order_repository: OrderRepositoryInterface
+    _repositories: list[BaseRepository] = []
+    event_publisher: EventPublisherInterface
 
     @abstractmethod
     async def __aenter__(self) -> "UnitOfWork":
@@ -29,3 +33,6 @@ class UnitOfWork(ABC):
     async def rollback(self):
         """Откат изменений."""
         pass
+
+    def register_repository(self, repo: BaseRepository):
+        self._repositories.append(repo)

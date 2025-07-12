@@ -8,6 +8,11 @@ class OrderStatusEnum(str, Enum):
     ASSIGNED = "ASSIGNED"
     COMPLETED = "COMPLETED"
 
+    @property
+    def value_number(self) -> int:
+        # Порядковый номер начинается с 1
+        return list(OrderStatusEnum).index(self) + 1
+
 
 class OrderStatus(BaseModel):
     name: OrderStatusEnum = Field(..., description="Имя статуса заказа")
