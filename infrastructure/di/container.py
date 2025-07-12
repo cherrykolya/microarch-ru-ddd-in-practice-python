@@ -15,6 +15,8 @@ from core.domain.services.dispatch_service import Dispatcher
 from core.ports.event_publisher_interface import EventPublisherInterface
 from infrastructure.adapters.grpc.geo.client import GRPCGeoService
 from infrastructure.adapters.kafka.event_publisher import KafkaEventPublisher, get_kafka_producer
+from infrastructure.adapters.postgres.outbox.outbox_poller import OutboxPollingPublisher
+from infrastructure.adapters.postgres.outbox.outbox_publisher import OutboxPublisher
 from infrastructure.adapters.postgres.session import get_db_session
 from infrastructure.adapters.postgres.uow import UnitOfWork as PostgresUnitOfWork
 from infrastructure.config.settings import Settings, get_settings
@@ -31,11 +33,15 @@ class Container(containers.DeclarativeContainer):
     )
 
     # Kafka
-    kafka_producer: providers.Provider[AIOKafkaProducer] = providers.Factory(get_kafka_producer)
+    kafka_producer: providers.Singleton[AIOKafkaProducer] = providers.Singleton(get_kafka_producer)
 
     kafka_event_publisher: providers.Provider[EventPublisherInterface] = providers.Factory(
         KafkaEventPublisher,
         kafka_producer=kafka_producer,
+    )
+
+    outbox_publisher: providers.Provider[OutboxPublisher] = providers.Factory(
+        OutboxPublisher,
     )
 
     # Geo Service
@@ -49,7 +55,7 @@ class Container(containers.DeclarativeContainer):
     unit_of_work = providers.Factory(
         PostgresUnitOfWork,
         session_factory=db_session_factory,
-        event_publisher=kafka_event_publisher,
+        event_publisher=outbox_publisher,
     )
 
     # Domain Services
@@ -93,4 +99,8 @@ class Container(containers.DeclarativeContainer):
     create_courier_use_case = providers.Factory(
         CreateCourierUseCase,
         uow=unit_of_work,
+    )
+
+    outbox_poller = providers.Factory(
+        OutboxPollingPublisher,
     )

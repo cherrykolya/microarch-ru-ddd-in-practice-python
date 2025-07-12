@@ -19,7 +19,7 @@ docker-compose up -d api      # запуск только API
 
 # Миграции
 poetry run alembic upgrade head          # применить все миграции
-poetry run alembic revision -m "name"    # создать новую миграцию
+poetry run alembic revision --autogenerate -m "name"    # создать новую миграцию
 poetry run alembic downgrade -1         # откатить последнюю миграцию
 
 # Тесты
