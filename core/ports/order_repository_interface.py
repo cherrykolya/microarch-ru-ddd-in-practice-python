@@ -1,10 +1,11 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from uuid import UUID
 
 from core.domain.model.order_aggregate.order_aggregate import Order
+from core.ports.base_repository_interface import BaseRepository
 
 
-class OrderRepositoryInterface(ABC):
+class OrderRepositoryInterface(BaseRepository):
     @abstractmethod
     async def add_order(self, order: Order) -> Order:
         pass

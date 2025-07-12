@@ -1,10 +1,11 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from uuid import UUID
 
 from core.domain.model.courier_aggregate.courier_aggregate import Courier
+from core.ports.base_repository_interface import BaseRepository
 
 
-class CourierRepositoryInterface(ABC):
+class CourierRepositoryInterface(BaseRepository):
     @abstractmethod
     async def add_courier(self, courier: Courier) -> Courier:
         pass
