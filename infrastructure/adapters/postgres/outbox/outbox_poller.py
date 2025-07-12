@@ -43,7 +43,7 @@ class OutboxPollingPublisher:
             # SELECT ... FOR UPDATE SKIP LOCKED
             stmt = (
                 select(OutboxEvent)
-                .where(OutboxEvent.is_sent is False)
+                .where(OutboxEvent.is_sent.is_(False))
                 .order_by(OutboxEvent.created_at)
                 .limit(self.batch_size)
                 .with_for_update(skip_locked=True)

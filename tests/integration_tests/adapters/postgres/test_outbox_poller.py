@@ -16,7 +16,8 @@ from infrastructure.events.integration_events import IntegrationOrderStatusChang
 
 @pytest.fixture
 def mock_event_publisher():
-    return AsyncMock()
+    mock = AsyncMock()
+    return mock
 
 
 @pytest.mark.asyncio
