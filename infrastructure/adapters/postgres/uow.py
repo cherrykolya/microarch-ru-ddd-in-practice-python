@@ -48,10 +48,12 @@ class UnitOfWork(UnitOfWorkInterface):
         for repo in self._repositories:
             domain_events.extend(repo.get_events())
 
-        await self._session.commit()
-
-        for event in domain_events:
-            await self.event_publisher.publish(event)
+        if self.event_publisher.requires_commit_after_publish:
+            await self.event_publisher.publish(domain_events, session=self._session)
+            await self._session.commit()
+        else:
+            await self._session.commit()
+            await self.event_publisher.publish(domain_events)
 
     async def rollback(self):
         if not self._session:

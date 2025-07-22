@@ -31,4 +31,5 @@ class TestUnitOfWork(UnitOfWork):
         if exc_type is not None:
             await self.rollback()
             return
+
         await self.commit()
